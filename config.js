@@ -102,7 +102,7 @@ function updateConfig(data) {//golden-fleece my savior idk how to spell that
     const newConfig = patch(defaultConfig, data);
     fs.writeFileSync('./config.json5', newConfig, 'utf-8');
     fs.close
-}
+} 
 
 function updateSetting(key, value) {
     // Check if key is a valid path; handle nested objects if needed
@@ -128,4 +128,4 @@ app.use(express.json()); // For parsing JSON request bodies
 
 updateConfig(config);
 
-module.exports = { config, updateConfig };
+module.exports = { config, updateConfig, updateSetting};
