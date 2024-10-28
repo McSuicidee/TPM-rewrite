@@ -1,3 +1,4 @@
+const express = require('express');
 const fs = require('fs');
 const { patch } = require('golden-fleece');
 const JSON5 = require("json5");
@@ -100,7 +101,30 @@ config.skip = { ...parsedDefaultConfig.skip, ...config.skip };
 function updateConfig(data) {//golden-fleece my savior idk how to spell that
     const newConfig = patch(defaultConfig, data);
     fs.writeFileSync('./config.json5', newConfig, 'utf-8');
+    fs.close
 }
+
+function updateSetting(key, value) {
+    // Check if key is a valid path; handle nested objects if needed
+    let [firstKey, ...restKeys] = key.split('.');
+    let targetObject = config[firstKey];
+
+    // Traverse nested keys if provided
+    for (const k of restKeys.slice(0, -1)) {
+        targetObject = targetObject[k] ?? {};
+    }
+
+    // Update the final key
+    const finalKey = restKeys[restKeys.length - 1];
+    targetObject[finalKey] = value;
+
+    // Save the update
+    updateConfig(JSON5.stringify(config, null, 2), targetObject);
+}
+
+const app = express();
+app.use(express.json()); // For parsing JSON request bodies
+
 
 updateConfig(config);
 

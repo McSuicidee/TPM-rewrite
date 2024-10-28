@@ -1,6 +1,7 @@
 const { logmc, debug, error, startTracker } = require('./logger.js');
 const { sleep, getLatestLog, normalNumber, sendDiscord } = require('./TPM-bot/Utils.js');
 const { config } = require('./config.js');
+const { updateConfig,updateSetting} = require('./config.js'); // import the updateConfig function
 const { igns, webhook, discordID } = config;
 
 const WebSocket = require('ws');
@@ -89,6 +90,70 @@ class TpmSocket {
         const data = JSON.parse(msg.data);//This isn't safe and if it's not JSON format then it'll crash but that's intentional!
         debug(message.toString());
         switch (msg.type) {
+            case "configUpdate": {
+                let username = data.username;
+                const { key, value } = data;
+                if (!username) {
+                    username =  Object.keys(this.bots)[0];
+                }
+                const bot = this.bots[username];
+                debug(JSON.stringify(data));
+                if (!bot) {
+                    debug(`Didn't find a bot for ${username}`);
+                    return;
+                }
+                const split = data.command.split(' ');
+                const command = split.shift();
+                bot.handleTerminal(command, split.join(' '));
+                console.log(data.command);
+                const messages = await startTracker();
+                try {
+                    updateSetting(key, value); // Update the setting
+            
+                    const message = `Config updated: \`${key}\` is now \`${value}\``;
+                    sendDiscord({
+                        title: 'Config Update Success!',
+                        color: 13313596,
+                        fields: [
+                            {
+                                name: 'Success',
+                                value: `\`\`${message}\`\``
+                            }
+                        ],
+                        thumbnail: {
+                            url: `https://mc-heads.net/head/${bot.uuid}.png`
+                        },
+                        footer: {
+                            text: 'TPM Rewrite',
+                            icon_url: 'https://media.discordapp.net/attachments/1223361756383154347/1263302280623427604/capybara-square-1.png?ex=6699bd6e&is=66986bee&hm=d18d0749db4fc3199c20ff973c25ac7fd3ecf5263b972cc0bafea38788cef9f3&=&format=webp&quality=lossless&width=437&height=437'
+                        }
+                    });
+            
+                    debug(`Config key ${key} updated to ${value}`);
+                } catch (error) {
+                    const message = `Error updating config: ${error.message}`;
+                    sendDiscord({
+                        title: 'Config Update Error!',
+                        color: 13313596,
+                        fields: [
+                            {
+                                name: 'Error',
+                                value: `\`\`${message}\`\``
+                            }
+                        ],
+                        thumbnail: {
+                            url: `https://mc-heads.net/head/${bot.uuid}.png`
+                        },
+                        footer: {
+                            text: 'TPM Rewrite',
+                            icon_url: 'https://media.discordapp.net/attachments/1223361756383154347/1263302280623427604/capybara-square-1.png?ex=6699bd6e&is=66986bee&hm=d18d0749db4fc3199c20ff973c25ac7fd3ecf5263b972cc0bafea38788cef9f3&=&format=webp&quality=lossless&width=437&height=437'
+                        }
+                    });
+            
+                    debug(`Failed to update config key ${key}: ${error.message}`);
+                }
+                break;
+            }
             case "list": {
                 const bot = this.bots[data.username];
                 data.price = normalNumber(data.price);
