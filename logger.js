@@ -49,7 +49,7 @@ function getIgns() {
     return currentIgns;
 }
 
-function logmc(string) {
+async function logmc(string) {
     let msg = '';
     if (!string) return;
     if (tracking) messages.push(string.replace(/§./g, ''));
